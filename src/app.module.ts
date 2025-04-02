@@ -14,11 +14,27 @@ import { OrderModule } from './modules/order/order.module';
 import { OrderStatusModule } from './modules/order-status/order-status.module';
 import { CustomerModule } from './modules/customer/customer.module';
 import { OrderTypeModule } from './modules/order-type/order-type.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
+    ConfigModule.forRoot({
+      isGlobal: true, // Make config globally available
+    }),
+    TypeOrmModule.forRootAsync({
+      useFactory: (configService: ConfigService) => ({
+        type: 'mysql',
+        host: configService.get('DATABASE_HOST'),
+        port: configService.get('DATABASE_PORT'),
+        username: configService.get('DATABASE_USER'),
+        password: configService.get('DATABASE_PASSWORD'),
+        database: configService.get('DATABASE_NAME'),
+        autoLoadEntities: true,
+        synchronize: true, // set to false in production
+      }),
+      inject: [ConfigService], // Inject ConfigService for accessing environment variables
+    }),
     BranchModule,
     CompanyModule,
     CategoryModule,
